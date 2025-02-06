@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Guessing Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+      /* From Uiverse.io by csemszepp */ 
+.containerx {
+  width: 100%;
+  height: 100%;
+  --s: 200px; /* control the size */
+  --c1: #1d1d1d;
+  --c2: #4e4f51;
+  --c3: #3c3c3c;
+
+  background: repeating-conic-gradient(
+        from 30deg,
+        #0000 0 120deg,
+        var(--c3) 0 180deg
+      )
+      calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+    repeating-conic-gradient(
+      from 30deg,
+      var(--c1) 0 60deg,
+      var(--c2) 0 120deg,
+      var(--c3) 0 180deg
+    );
+  background-size: var(--s) calc(var(--s) * 0.577);
+}
+
+
+        .container {
+            background: rgba(255, 255, 255, 0.212);
+            max-width: 90vw;
+            width: 500px;
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            border: 2px solid white;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        #colorBox {
+            width: 150px;
+            height: 150px;
+            margin: 1rem auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            max-width: 100%;
+            margin: 1rem auto;
+        }
+
+        .color-option {
+            width: 100%;
+            height: 80px;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        #gameStatus {
+            font-size: 1rem;
+            margin: 1rem 0;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            display: inline-block;
+            background: rgba(255,255,255,0.9);
+        }
+
+        #score {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0.5rem 0;
+        }
+
+        button#newGameButton {
+            padding: 10px 20px;
+            margin-top: 0.3rem;
+            font-size: 0.9rem;
+            background: #3498db;
+            color: white;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+                max-width: 95vw;
+            }
+            
+            #colorBox {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .color-options {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            
+            .color-option {
+                height: 45px;
+            }
+            
+            button#newGameButton {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body class="containerx">
+    <div class="container">
+        <h2 data-testid="gameInstructions">Guess the Correct Color!</h2>
+        <div id="colorBox" data-testid="colorBox"></div>
+        <div class="color-options" id="colorOptions"></div>
+        <p id="gameStatus" data-testid="gameStatus"></p>
+        <p>Score: <span id="score" data-testid="score">0</span></p>
+        <button id="newGameButton" data-testid="newGameButton">New Game</button>
+    </div>
+
+   <script>
+    let targetColor = "";
+let score = 0;
+
+const colorBox = document.getElementById("colorBox");
+const colorOptions = document.getElementById("colorOptions");
+const gameStatus = document.getElementById("gameStatus");
+const scoreDisplay = document.getElementById("score");
+const newGameButton = document.getElementById("newGameButton");
+
+function generateRandomHex() {
+    return '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0').toLowerCase();
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function generateGame() {
+    targetColor = generateRandomHex();
+    
+    colorBox.style.backgroundColor = targetColor;
+    colorOptions.innerHTML = "";
+
+    // Generate 5 random colors + target color
+    const colors = Array.from({ length: 5 }, generateRandomHex);
+    colors.push(targetColor);
+    shuffleArray(colors);
+
+    colors.forEach(color => {
+        const button = document.createElement("button");
+        button.classList.add("color-option");
+        button.style.backgroundColor = color;
+        button.setAttribute("data-testid", "colorOption");
+        button.addEventListener("click", () => checkGuess(color));
+        colorOptions.appendChild(button);
+    });
+
+    gameStatus.textContent = "";
+    gameStatus.style.removeProperty('background');
+}
+
+function checkGuess(selectedColor) {
+   
+    if (selectedColor.toLowerCase() === targetColor.toLowerCase()) {
+        alert("Correct! 🎉");
+        gameStatus.innerHTML = "Correct! 🎉";
+        gameStatus.style.color = "green";
+        gameStatus.style.background = "rgba(39,174,96,0.1)";
+        score++;
+        scoreDisplay.textContent = score;
+        generateGame(); // Start a new game after correct guess
+    } else {
+        gameStatus.textContent = "Wrong! Try Again.";
+        gameStatus.style.color = "#e74c3c";
+        gameStatus.style.background = "rgba(231,76,60,0.1)";
+    }
+}
+
+newGameButton.addEventListener("click", () => {
+    score = 0;
+    scoreDisplay.textContent = score;
+    generateGame();
+});
+
+generateGame();
+   </script>
+</body>
+</html>
